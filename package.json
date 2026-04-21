@@ -1,0 +1,18 @@
+{
+  "name": "break-distrib",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": ["frontend", "admin", "backend"],
+  "scripts": {
+    "dev": "concurrently \"bun run dev:frontend\" \"bun run dev:admin\" \"bun run dev:backend\"",
+    "dev:frontend": "bun run --filter frontend dev",
+    "dev:admin": "bun run --filter admin dev",
+    "dev:backend": "bun run --filter backend dev",
+    "build": "bun run build:frontend && bun run build:admin",
+    "build:frontend": "bun run --filter frontend build",
+    "build:admin": "bun run --filter admin build"
+  },
+  "devDependencies": {
+    "concurrently": "^9.0.0"
+  }
+}

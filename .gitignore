@@ -1,0 +1,35 @@
+# Dependencies
+**/node_modules/
+
+# Build
+**/dist/
+**/build/
+**/.next/
+
+# Environment
+**/.env
+**/.env.local
+**/.env.*.local
+
+# Logs
+**/logs/
+**/*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/settings.json
+.idea/
+
+# Bun
+bun.lock
+
+# Drizzle
+**/src/db/migrations/*.sql
+
+# Supabase
+**/supabase/.branches
+**/supabase/.temp
