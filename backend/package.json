@@ -9,19 +9,29 @@
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
+    "seed": "bun run scripts/seed.ts",
+    "email:dev": "email dev --dir src/emails --port 3333",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "hono": "^4.6.0",
     "@hono/zod-validator": "^0.4.0",
-    "drizzle-orm": "^0.38.0",
-    "postgres": "^3.4.0",
+    "@react-email/components": "^1.0.12",
+    "@react-email/render": "^2.0.7",
     "better-auth": "^1.0.0",
+    "drizzle-orm": "^0.38.0",
+    "hono": "^4.6.0",
+    "postgres": "^3.4.0",
+    "react": "^19.2.5",
+    "react-dom": "^19.2.5",
     "resend": "^4.0.0",
-    "zod": "^3.23.0"
+    "zod": "^3.23.0",
+    "@break-distrib/schemas": "workspace:*"
   },
   "devDependencies": {
     "@types/bun": "^1.3.12",
-    "drizzle-kit": "^0.30.0"
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "drizzle-kit": "^0.30.0",
+    "react-email": "^6.0.0"
   }
 }
