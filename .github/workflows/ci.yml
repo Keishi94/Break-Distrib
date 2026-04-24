@@ -9,6 +9,20 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: breakdistrib
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     steps:
       - uses: actions/checkout@v4
 
@@ -27,3 +41,15 @@ jobs:
 
       - name: Type check backend
         run: cd backend && bun run typecheck
+
+      - name: Check DB isolation
+        run: |
+          if grep -rn "from '../db" backend/src/routes/; then
+            echo "Direct DB imports in routes are forbidden. Use services."
+            exit 1
+          fi
+
+      - name: Run backend tests
+        env:
+          DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/breakdistrib"
+        run: cd backend && bun run db:push && bun test
