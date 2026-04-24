@@ -11,3 +11,6 @@ export const routes = new Hono()
   .route('/metriques', metriquesRoutes)
   .route('/contrats', contratsRoutes)
   .route('/relances', relancesRoutes)
+
+// Empty for now; public routes (signature contrat, audit form) land in P2.
+export const publicRoutes = new Hono()
