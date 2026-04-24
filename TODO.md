@@ -27,29 +27,29 @@
 
 ### P0.2 — Helpers backend et middleware global
 
-- [ ] **S** — Créer `backend/src/lib/response.ts` avec `ok(data, meta?)` et `fail(code, message, fields?)` (inférés des types du package schemas)
-- [ ] **S** — Créer `backend/src/lib/errors.ts` avec la classe `AppError` (code, message, fields optionnels)
-- [ ] **M** — Créer `backend/src/middlewares/error-handler.ts` qui catche : `ZodError` → `VALIDATION_ERROR 400`, `AppError` → code/status correspondant, reste → `INTERNAL_ERROR 500` + log
-- [ ] **XS** — Brancher le middleware dans `backend/src/index.ts` (ordre : auth → autres → error-handler en dernier)
+- [x] **S** — Créer `backend/src/lib/response.ts` avec `ok(data, meta?)` et `fail(code, message, fields?)` (inférés des types du package schemas)
+- [x] **S** — Créer `backend/src/lib/errors.ts` avec la classe `AppError` (code, message, fields optionnels)
+- [x] **M** — Créer `backend/src/middlewares/error-handler.ts` qui catche : `ZodError` → `VALIDATION_ERROR 400`, `AppError` → code/status correspondant, reste → `INTERNAL_ERROR 500` + log
+- [x] **XS** — Brancher le middleware dans `backend/src/index.ts` (ordre : auth → autres → error-handler en dernier)
 
 ### P0.3 — Harness de tests
 
-- [ ] **M** — Créer `backend/src/test-utils/db.ts` : `resetDb()` (truncate + reseed), `seedMinimal()` (5 entreprises + 2 distributeurs + 1 contrat brouillon, fixtures déterministes)
-- [ ] **M** — Créer `backend/src/test-utils/client.ts` : `testClient({ role, anonymous? })` qui retourne un client Hono testing authentifié avec un user seedé au rôle voulu
-- [ ] **S** — Ajouter `bun test` au `.github/workflows/ci.yml` (avec un Postgres de service dans le workflow)
-- [ ] **S** — Écrire un test de référence `backend/tests/health.test.ts` (GET `/`, attend 200) pour valider que le harness tourne
-- [ ] **S** — Documenter dans `AGENTS.md` la commande de lancement des tests + comment seeder en local
+- [x] **M** — Créer `backend/src/test-utils/db.ts` : `resetDb()` (truncate + reseed), `seedMinimal()` (5 entreprises + 2 distributeurs + 1 contrat brouillon, fixtures déterministes)
+- [x] **M** — Créer `backend/src/test-utils/client.ts` : `testClient({ role, anonymous? })` qui retourne un client Hono testing authentifié avec un user seedé au rôle voulu
+- [x] **S** — Ajouter `bun test` au `.github/workflows/ci.yml` (avec un Postgres de service dans le workflow)
+- [x] **S** — Écrire un test de référence `backend/tests/health.test.ts` (GET `/`, attend 200) pour valider que le harness tourne
+- [x] **S** — Documenter dans `AGENTS.md` la commande de lancement des tests + comment seeder en local
 
 ### P0.4 — OpenAPI auto-généré
 
-- [ ] **S** — Ajouter `@hono/zod-openapi` en dépendance backend
-- [ ] **M** — Convertir le routeur principal Hono en `OpenAPIHono`, exposer `GET /openapi.json` et `GET /docs` (Scalar ou Swagger UI)
-- [ ] **S** — Vérifier que les routes existantes sont dans le spec (elles apparaissent même sans refactor complet, mais sans schémas précis tant qu'on n'a pas migré)
+- [x] **S** — Ajouter `@hono/zod-openapi` en dépendance backend
+- [x] **M** — Convertir le routeur principal Hono en `OpenAPIHono`, exposer `GET /openapi.json` et `GET /docs` (Scalar ou Swagger UI)
+- [x] **S** — Vérifier que les routes existantes sont dans le spec (elles apparaissent même sans refactor complet, mais sans schémas précis tant qu'on n'a pas migré)
 
 ### P0.5 — Conventions d'accès DB
 
-- [ ] **S** — Linter custom (ESLint règle) ou script grep dans CI : interdit `import ... from "../db"` depuis `backend/src/routes/**`. Seuls `services/` peuvent importer la DB
-- [ ] **XS** — Ajouter cette vérif dans le workflow CI
+- [x] **S** — Linter custom (ESLint règle) ou script grep dans CI : interdit `import ... from "../db"` depuis `backend/src/routes/**`. Seuls `services/` peuvent importer la DB
+- [x] **XS** — Ajouter cette vérif dans le workflow CI
 
 ---
 
