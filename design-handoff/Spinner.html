@@ -1,0 +1,444 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Break'Distrib — Loader</title>
+<style>
+  /* ---------- Tweak defaults (persisted via host) ---------- */
+  /* speed: 1 = normal (~6s cycle). 0.5 = half-speed (12s). 2 = double speed. */
+  /* theme: "auto" | "light" | "dark" */
+  /* hud:   show size comparison chrome */
+
+  :root {
+    --orange: #F37021;
+    --cream:  #F5EFE6;
+    --ink:    #0E0E0C;
+
+    --bg: var(--cream);
+    --fg: var(--ink);
+
+    --cycle: 6s;            /* base duration, scaled by --speed */
+    --speed: 1;
+  }
+
+  html[data-theme="dark"]  { --bg: var(--ink);   --fg: var(--cream); }
+  html[data-theme="light"] { --bg: var(--cream); --fg: var(--ink);   }
+
+  @media (prefers-color-scheme: dark) {
+    html[data-theme="auto"] { --bg: var(--ink); --fg: var(--cream); }
+  }
+
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    -webkit-font-smoothing: antialiased;
+    transition: background-color .4s ease, color .4s ease;
+    overflow: hidden;
+  }
+
+  /* ---------- Stage ---------- */
+  .stage {
+    position: fixed; inset: 0;
+    display: grid;
+    place-items: center;
+  }
+
+  /* Hero loader — the main event */
+  .hero {
+    width: min(44vmin, 460px);
+    aspect-ratio: 1 / 1;
+    display: grid;
+    place-items: center;
+  }
+  .hero svg { width: 100%; height: 100%; display: block; }
+
+  /* ---------- HUD: sizing comparison strip (tweakable) ---------- */
+  .hud {
+    position: fixed;
+    left: 50%;
+    bottom: 6vh;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: flex-end;
+    gap: 48px;
+    opacity: .78;
+    pointer-events: none;
+    transition: opacity .3s ease;
+  }
+  html[data-hud="false"] .hud { display: none; }
+
+  .swatch {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+  }
+  .swatch-inner { display: grid; place-items: center; }
+  .swatch svg { display: block; }
+  .swatch-label {
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: color-mix(in oklab, var(--fg) 55%, transparent);
+    font-weight: 500;
+  }
+
+  .s-32  .swatch-inner { width: 32px;  height: 32px;  }
+  .s-120 .swatch-inner { width: 120px; height: 120px; }
+  .s-200 .swatch-inner { width: 200px; height: 200px; }
+
+  /* ---------- Corner labels (tweakable) ---------- */
+  .meta {
+    position: fixed;
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: color-mix(in oklab, var(--fg) 50%, transparent);
+    font-weight: 500;
+    pointer-events: none;
+  }
+  html[data-hud="false"] .meta { display: none; }
+  .meta.tl { top: 22px; left: 24px; }
+  .meta.tr { top: 22px; right: 24px; text-align: right; }
+  .meta.bl { bottom: 22px; left: 24px; }
+  .meta.tr .dot {
+    display: inline-block; width: 6px; height: 6px;
+    background: var(--orange); border-radius: 50%;
+    vertical-align: middle; margin-right: 6px;
+    transform: translateY(-1px);
+  }
+
+  /* ---------- Tweaks panel ---------- */
+  .tweaks {
+    position: fixed;
+    right: 20px;
+    bottom: 20px;
+    width: 260px;
+    background: color-mix(in oklab, var(--bg) 92%, var(--fg));
+    color: var(--fg);
+    border: 1px solid color-mix(in oklab, var(--fg) 14%, transparent);
+    border-radius: 10px;
+    padding: 14px 14px 12px;
+    font-size: 11px;
+    font-family: ui-monospace, monospace;
+    box-shadow: 0 12px 40px -12px color-mix(in oklab, var(--fg) 30%, transparent);
+    display: none;
+    z-index: 99;
+  }
+  .tweaks.on { display: block; }
+  .tweaks h4 {
+    margin: 0 0 12px;
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    font-weight: 600;
+    color: color-mix(in oklab, var(--fg) 65%, transparent);
+  }
+  .row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; gap: 10px; }
+  .row:last-child { margin-bottom: 0; }
+  .row label { flex: 0 0 auto; color: color-mix(in oklab, var(--fg) 80%, transparent); }
+  .row .control { flex: 1 1 auto; display: flex; justify-content: flex-end; gap: 6px; }
+  .seg {
+    display: inline-flex;
+    border: 1px solid color-mix(in oklab, var(--fg) 18%, transparent);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .seg button {
+    appearance: none; border: 0; background: transparent;
+    color: var(--fg);
+    padding: 4px 8px;
+    font: inherit;
+    cursor: pointer;
+    opacity: .6;
+  }
+  .seg button.active { background: color-mix(in oklab, var(--fg) 12%, transparent); opacity: 1; }
+  .tweaks input[type="range"] { width: 110px; accent-color: var(--orange); }
+  .val { font-variant-numeric: tabular-nums; min-width: 36px; text-align: right; color: color-mix(in oklab, var(--fg) 65%, transparent); }
+
+  @media (max-width: 720px) {
+    .hud { gap: 28px; bottom: 4vh; }
+    .s-200 { display: none; }
+    .tweaks { left: 12px; right: 12px; bottom: 12px; width: auto; }
+    .meta.tr, .meta.bl { display: none; }
+  }
+</style>
+</head>
+<body>
+
+  <div class="meta tl">Break'Distrib&nbsp;&nbsp;·&nbsp;&nbsp;Loader 01</div>
+  <div class="meta tr"><span class="dot"></span>#F37021</div>
+  <div class="meta bl">La pause, réinventée.</div>
+
+  <main class="stage">
+    <div class="hero" aria-label="Loading">
+      <!-- Hero uses shared <symbol> defined in defs svg below -->
+      <svg viewBox="0 0 100 100" role="img" aria-label="Break'Distrib loader">
+        <use href="#bd-loader" />
+      </svg>
+    </div>
+  </main>
+
+  <!-- Size-comparison strip -->
+  <div class="hud" aria-hidden="true">
+    <div class="swatch s-32">
+      <div class="swatch-inner">
+        <svg viewBox="0 0 100 100" width="100%" height="100%"><use href="#bd-loader" /></svg>
+      </div>
+      <div class="swatch-label">32&nbsp;px</div>
+    </div>
+    <div class="swatch s-120">
+      <div class="swatch-inner">
+        <svg viewBox="0 0 100 100" width="100%" height="100%"><use href="#bd-loader" /></svg>
+      </div>
+      <div class="swatch-label">120&nbsp;px</div>
+    </div>
+    <div class="swatch s-200">
+      <div class="swatch-inner">
+        <svg viewBox="0 0 100 100" width="100%" height="100%"><use href="#bd-loader" /></svg>
+      </div>
+      <div class="swatch-label">200&nbsp;px</div>
+    </div>
+  </div>
+
+  <!-- Hidden SVG defs: one symbol, referenced everywhere -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <!--
+        The mark lives in a 100x100 box, centered on (50,50).
+        It's wrapped in a rotating group and composed of two
+        <path> elements whose `d` values animate between the
+        pause and play states via SMIL + <set>.
+      -->
+      <symbol id="bd-loader" viewBox="0 0 100 100">
+        <g id="bd-rotor" transform="rotate(0 50 50)">
+
+          <!--
+            Both bars morph into the SAME right-pointing triangle
+            so the play pose reads as one unified shape (no visible seam).
+
+            Triangle (apex pointing right):
+              base : (32, 22) → (32, 78)
+              apex : (74, 50)
+
+            Each bar is a 4-point quad. Corners map 1:1 between poses:
+
+              LEFT  pause  rect : TL(36,26) TR(44,26) BR(44,74) BL(36,74)
+              LEFT  play   tri  : TL(32,22) TR(74,50) BR(74,50) BL(32,78)
+              RIGHT pause  rect : TL(56,26) TR(64,26) BR(64,74) BL(56,74)
+              RIGHT play   tri  : TL(32,22) TR(74,50) BR(74,50) BL(32,78)
+
+            Both play quads describe the SAME triangle → filled area is
+            identical, anti-aliasing on the shared edge is exact, and the
+            result reads as a single solid mark.
+          -->
+          <!--
+            Timeline (normalized to cycle length):
+              0.00 – 0.10  hold pause, upright
+              0.10 – 0.45  PAUSE BARS ROTATE 360° (visible spin)
+              0.45 – 0.55  morph pause → play (upright, so play points RIGHT)
+              0.55 – 0.75  hold play
+              0.75 – 0.85  morph play → pause (upright)
+              0.85 – 1.00  hold pause, upright
+
+            Both pause and play are only ever displayed at rotation ≡ 0° (mod 360°),
+            so the pause bars are always perfectly vertical and the play triangle
+            always points right. Rotation only happens while the shape is in its
+            pause pose, where it reads as "the two bars turning".
+          -->
+          <!--
+            Timeline (normalized to cycle length):
+              0.00 – 0.10  hold pause, upright
+              0.10 – 0.45  rotate 0° → 360°  AND  morph pause → play (in parallel)
+                           → at 0.45: upright, play triangle pointing right
+              0.45 – 0.65  hold play
+              0.65 – 1.00  rotate 360° → 720°  AND  morph play → pause (in parallel)
+                           → at 1.00: upright, pause bars
+
+            The shape transforms WHILE spinning — the bars become a triangle
+            during the rotation, not before or after. Both pause and play poses
+            land on rotation ≡ 0° (mod 360°), so the mark is always upright
+            when at rest and the triangle always points right.
+          -->
+          <path class="bar left"
+                d="M 36 26 L 44 26 L 44 74 L 36 74 Z"
+                fill="#F37021"
+                shape-rendering="geometricPrecision">
+            <animate attributeName="d" attributeType="XML"
+                     dur="6s" repeatCount="indefinite" calcMode="spline"
+                     keyTimes="0;   0.10;  0.45;  0.65;  1"
+                     keySplines="0.5 0 0.5 1; 0.65 0 0.35 1; 0.5 0 0.5 1; 0.65 0 0.35 1"
+                     values="
+                       M 36 26 L 44 26 L 44 74 L 36 74 Z;
+                       M 36 26 L 44 26 L 44 74 L 36 74 Z;
+                       M 32 22 L 74 50 L 74 50 L 32 78 Z;
+                       M 32 22 L 74 50 L 74 50 L 32 78 Z;
+                       M 36 26 L 44 26 L 44 74 L 36 74 Z" />
+          </path>
+
+          <path class="bar right"
+                d="M 56 26 L 64 26 L 64 74 L 56 74 Z"
+                fill="#F37021"
+                shape-rendering="geometricPrecision">
+            <animate attributeName="d" attributeType="XML"
+                     dur="6s" repeatCount="indefinite" calcMode="spline"
+                     keyTimes="0;   0.10;  0.45;  0.65;  1"
+                     keySplines="0.5 0 0.5 1; 0.65 0 0.35 1; 0.5 0 0.5 1; 0.65 0 0.35 1"
+                     values="
+                       M 56 26 L 64 26 L 64 74 L 56 74 Z;
+                       M 56 26 L 64 26 L 64 74 L 56 74 Z;
+                       M 32 22 L 74 50 L 74 50 L 32 78 Z;
+                       M 32 22 L 74 50 L 74 50 L 32 78 Z;
+                       M 56 26 L 64 26 L 64 74 L 56 74 Z" />
+          </path>
+
+          <!--
+            Rotation is continuous: one full 360° during the pause→play
+            morph, then another 360° during the play→pause morph. Both
+            morphs run in parallel with the spin so the shape is literally
+            transforming while it turns. Total: 720° per cycle.
+          -->
+          <animateTransform xlink:href="#bd-rotor"
+                            attributeName="transform"
+                            attributeType="XML"
+                            type="rotate"
+                            dur="6s"
+                            repeatCount="indefinite"
+                            calcMode="spline"
+                            keyTimes="0;   0.10;  0.45;  0.65;  1"
+                            keySplines="0.5 0 0.5 1; 0.65 0 0.35 1; 0.5 0 0.5 1; 0.65 0 0.35 1"
+                            values="0 50 50; 0 50 50; 360 50 50; 360 50 50; 720 50 50" />
+        </g>
+      </symbol>
+    </defs>
+  </svg>
+
+  <!-- Tweaks panel (surfaced only when the host toggles Tweaks on) -->
+  <section class="tweaks" id="tweaks">
+    <h4>Tweaks</h4>
+    <div class="row">
+      <label>Theme</label>
+      <div class="control">
+        <div class="seg" data-seg="theme">
+          <button data-val="auto">Auto</button>
+          <button data-val="light">Light</button>
+          <button data-val="dark">Dark</button>
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <label>Speed</label>
+      <div class="control">
+        <input type="range" id="speed" min="0.25" max="2" step="0.05" />
+        <span class="val" id="speedVal">1.00×</span>
+      </div>
+    </div>
+    <div class="row">
+      <label>HUD</label>
+      <div class="control">
+        <div class="seg" data-seg="hud">
+          <button data-val="true">On</button>
+          <button data-val="false">Off</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+<script>
+  // ---------- Tweak defaults (persisted on disk via the host) ----------
+  const TWEAKS = /*EDITMODE-BEGIN*/{
+    "speed": 2,
+    "theme": "light",
+    "hud": true
+  }/*EDITMODE-END*/;
+
+  const root = document.documentElement;
+
+  function applyAll(t) {
+    // Theme
+    root.setAttribute('data-theme', t.theme);
+    // HUD
+    root.setAttribute('data-hud', String(!!t.hud));
+    // Speed — scale every SMIL animation's duration
+    const cycle = 6 / Math.max(0.05, Number(t.speed) || 1);
+    document.querySelectorAll('animate, animateTransform').forEach(a => {
+      a.setAttribute('dur', cycle + 's');
+    });
+    // Honor reduced-motion: freeze on pause pose
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    document.querySelectorAll('animate, animateTransform').forEach(a => {
+      if (reduce) a.setAttribute('begin', 'indefinite');
+      else a.removeAttribute('begin');
+    });
+  }
+
+  applyAll(TWEAKS);
+
+  // React to system theme changes when in auto
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+    // nothing to do — CSS handles it via data-theme="auto"
+  });
+
+  // ---------- Tweaks wiring ----------
+  const panel = document.getElementById('tweaks');
+  const speedEl = document.getElementById('speed');
+  const speedVal = document.getElementById('speedVal');
+
+  function syncUI() {
+    // Segmented controls
+    panel.querySelectorAll('[data-seg]').forEach(seg => {
+      const key = seg.dataset.seg;
+      seg.querySelectorAll('button').forEach(b => {
+        const on = String(TWEAKS[key]) === b.dataset.val;
+        b.classList.toggle('active', on);
+      });
+    });
+    speedEl.value = TWEAKS.speed;
+    speedVal.textContent = Number(TWEAKS.speed).toFixed(2) + '×';
+  }
+  syncUI();
+
+  function setTweak(key, value) {
+    TWEAKS[key] = value;
+    applyAll(TWEAKS);
+    syncUI();
+    // persist
+    window.parent.postMessage({ type: '__edit_mode_set_keys', edits: { [key]: value } }, '*');
+  }
+
+  panel.querySelectorAll('[data-seg]').forEach(seg => {
+    const key = seg.dataset.seg;
+    seg.addEventListener('click', e => {
+      const b = e.target.closest('button');
+      if (!b) return;
+      let v = b.dataset.val;
+      if (v === 'true') v = true;
+      else if (v === 'false') v = false;
+      setTweak(key, v);
+    });
+  });
+  speedEl.addEventListener('input', () => {
+    const v = parseFloat(speedEl.value);
+    speedVal.textContent = v.toFixed(2) + '×';
+    // live preview without persisting every frame
+    TWEAKS.speed = v;
+    applyAll(TWEAKS);
+  });
+  speedEl.addEventListener('change', () => setTweak('speed', parseFloat(speedEl.value)));
+
+  // ---------- Host Tweaks protocol ----------
+  window.addEventListener('message', (e) => {
+    const d = e.data || {};
+    if (d.type === '__activate_edit_mode')   panel.classList.add('on');
+    if (d.type === '__deactivate_edit_mode') panel.classList.remove('on');
+  });
+  // Announce after listener is live
+  window.parent.postMessage({ type: '__edit_mode_available' }, '*');
+</script>
+</body>
+</html>

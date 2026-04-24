@@ -1,37 +1,52 @@
 import { Hono } from 'hono'
-import { db } from '../db/client'
-import { distributeurs } from '../db/schema/index'
-import { eq } from 'drizzle-orm'
+import { zValidator } from '@hono/zod-validator'
+import { z } from 'zod'
+import { requireAuth, requireRole, type AuthVariables } from '../middlewares/auth'
+import { paginationSchema } from '../lib/query'
+import * as svc from '../services/distributeurs'
 
-export const distributeursRoutes = new Hono()
-  .get('/', async (c) => {
-    const data = await db.select().from(distributeurs).orderBy(distributeurs.createdAt)
-    return c.json({ data })
-  })
-  .post('/', async (c) => {
-    const body = await c.req.json()
-    const [created] = await db.insert(distributeurs).values(body).returning()
-    return c.json({ data: created }, 201)
+const statutDistributeur = z.enum(['actif', 'maintenance', 'panne', 'inactif'])
+
+const createSchema = z.object({
+  nom: z.string().min(1),
+  modele: z.string().optional().nullable(),
+  place: z.string().optional().nullable(),
+  adresse: z.string().min(1),
+  latitude: z.number(),
+  longitude: z.number(),
+  prospectId: z.string().uuid().optional().nullable(),
+  clientId: z.string().uuid().optional().nullable(),
+  statut: statutDistributeur.optional(),
+  actif: z.boolean().optional(),
+  stockActuel: z.number().int().optional().nullable(),
+  tempActuelle: z.number().optional().nullable(),
+  installeLe: z.coerce.date().optional()
+})
+
+const updateSchema = createSchema.partial()
+
+const querySchema = paginationSchema.extend({
+  statut: statutDistributeur.optional(),
+  clientId: z.string().uuid().optional()
+})
+
+const TECH = ['admin', 'direction', 'technique'] as const
+
+export const distributeursRoutes = new Hono<{ Variables: AuthVariables }>()
+  .use('*', requireAuth)
+  .get('/', zValidator('query', querySchema), async (c) => {
+    return c.json(await svc.listDistributeurs(c.req.valid('query')))
   })
   .get('/:id', async (c) => {
-    const [data] = await db
-      .select()
-      .from(distributeurs)
-      .where(eq(distributeurs.id, c.req.param('id')))
-    if (!data) return c.json({ error: 'Not found' }, 404)
-    return c.json({ data })
+    return c.json({ data: await svc.getDistributeur(c.req.param('id')) })
   })
-  .put('/:id', async (c) => {
-    const body = await c.req.json()
-    const [updated] = await db
-      .update(distributeurs)
-      .set({ ...body, updatedAt: new Date() })
-      .where(eq(distributeurs.id, c.req.param('id')))
-      .returning()
-    if (!updated) return c.json({ error: 'Not found' }, 404)
-    return c.json({ data: updated })
+  .post('/', requireRole(...TECH), zValidator('json', createSchema), async (c) => {
+    return c.json({ data: await svc.createDistributeur(c.req.valid('json')) }, 201)
   })
-  .delete('/:id', async (c) => {
-    await db.delete(distributeurs).where(eq(distributeurs.id, c.req.param('id')))
+  .put('/:id', requireRole(...TECH), zValidator('json', updateSchema), async (c) => {
+    return c.json({ data: await svc.updateDistributeur(c.req.param('id'), c.req.valid('json')) })
+  })
+  .delete('/:id', requireRole('admin', 'direction'), async (c) => {
+    await svc.deleteDistributeur(c.req.param('id'))
     return c.json({ success: true })
   })

@@ -1,16 +1,213 @@
 @import "tailwindcss";
 
-@layer base {
-  :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-    --primary: 221.2 83.2% 53.3%;
-    --primary-foreground: 210 40% 98%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --border: 214.3 31.8% 91.4%;
-    --radius: 0.5rem;
+@import "@fontsource-variable/geist/index.css";
+@import "@fontsource-variable/geist-mono/index.css";
+
+/* ---------- Dark mode variant driven by [data-theme="dark"] on <html> ---------- */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+/* ============================================================
+   Break'Distrib — design tokens
+   Brand: orange #F37021 / cream #F5EFE6 / ink #0E0E0C
+   Neutrals: warm, cream-biased (NO cold grays)
+   ============================================================ */
+@theme {
+  /* Brand */
+  --color-bd-orange: #F37021;
+  --color-bd-orange-600: #DA5F14;
+  --color-bd-orange-100: #FCE2D0;
+  --color-bd-orange-50: #FCF0E6;
+  --color-bd-cream: #F5EFE6;
+  --color-bd-cream-2: #EFE8DC;
+  --color-bd-ink: #0E0E0C;
+
+  /* Warm neutrals */
+  --color-n-0: #FDFBF7;
+  --color-n-25: #F9F5EE;
+  --color-n-50: #F5EFE6;
+  --color-n-100: #EDE6DA;
+  --color-n-200: #E0D8C9;
+  --color-n-300: #CCC3B2;
+  --color-n-400: #A69E8C;
+  --color-n-500: #7A7365;
+  --color-n-600: #55503F;
+  --color-n-700: #3A3730;
+  --color-n-800: #24231F;
+  --color-n-900: #14130F;
+
+  /* Semantic (fixed across themes) */
+  --color-ok: #2E8F5E;
+  --color-warn: #C6881E;
+  --color-err: #C0443A;
+  --color-info: #2E6DB4;
+
+  /* Theme-bound colors (surfaces, text, borders) — read CSS vars below */
+  --color-surface: var(--bd-surface);
+  --color-surface-2: var(--bd-surface-2);
+  --color-surface-3: var(--bd-surface-3);
+  --color-elev: var(--bd-elev);
+  --color-border: var(--bd-border);
+  --color-border-strong: var(--bd-border-strong);
+  --color-text: var(--bd-text);
+  --color-text-2: var(--bd-text-2);
+  --color-text-3: var(--bd-text-3);
+  --color-text-inv: var(--bd-text-inv);
+  --color-ok-bg: var(--bd-ok-bg);
+  --color-warn-bg: var(--bd-warn-bg);
+  --color-err-bg: var(--bd-err-bg);
+  --color-info-bg: var(--bd-info-bg);
+
+  /* Typography */
+  --font-sans: "Geist Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "Geist Mono Variable", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+  /* Radii */
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+
+  /* Shadows */
+  --shadow-xs: 0 1px 0 rgba(20, 19, 15, 0.04);
+  --shadow-sm: 0 1px 2px rgba(20, 19, 15, 0.05), 0 1px 1px rgba(20, 19, 15, 0.04);
+  --shadow-md: 0 4px 10px -2px rgba(20, 19, 15, 0.08), 0 2px 4px rgba(20, 19, 15, 0.05);
+  --shadow-lg: 0 18px 40px -12px rgba(20, 19, 15, 0.22), 0 4px 10px -2px rgba(20, 19, 15, 0.08);
+  --shadow-accent: 0 6px 16px rgba(243, 112, 33, 0.35);
+
+  /* Motion */
+  --ease-bd: cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+/* ---------- Theme-bound CSS variables (consumed by @theme above) ---------- */
+:root {
+  --bd-surface: #FDFBF7;
+  --bd-surface-2: #F9F5EE;
+  --bd-surface-3: #F3ECE0;
+  --bd-elev: #FFFFFF;
+  --bd-border: #E3DBCC;
+  --bd-border-strong: #CFC6B4;
+  --bd-text: #14130F;
+  --bd-text-2: #55503F;
+  --bd-text-3: #7A7365;
+  --bd-text-inv: #FDFBF7;
+
+  --bd-ok-bg: #E3F1E8;
+  --bd-warn-bg: #F8EBCE;
+  --bd-err-bg: #F5DCD8;
+  --bd-info-bg: #DDE8F4;
+}
+
+[data-theme="dark"] {
+  --bd-surface: #151412;
+  --bd-surface-2: #1C1B18;
+  --bd-surface-3: #22201C;
+  --bd-elev: #1F1D1A;
+  --bd-border: #2B2925;
+  --bd-border-strong: #3A3731;
+  --bd-text: #F3ECE0;
+  --bd-text-2: #B8AF9C;
+  --bd-text-3: #7F7866;
+  --bd-text-inv: #0E0E0C;
+
+  --bd-ok-bg: rgba(46, 143, 94, 0.18);
+  --bd-warn-bg: rgba(198, 136, 30, 0.18);
+  --bd-err-bg: rgba(192, 68, 58, 0.18);
+  --bd-info-bg: rgba(46, 109, 180, 0.18);
+}
+
+/* ---------- Base ---------- */
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bd-surface-2);
+  color: var(--bd-text);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.4;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: "ss01", "cv11";
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--bd-border-strong);
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-n-500);
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-bd-orange);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ---------- Utilities ---------- */
+@utility label-caps {
+  font-size: 10.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--bd-text-3);
+  font-weight: 500;
+}
+
+@utility tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- IoT pulse keyframes (status dots) ---------- */
+@keyframes pulse-ok {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(46, 143, 94, 0.55);
   }
+  50% {
+    box-shadow: 0 0 0 6px rgba(46, 143, 94, 0);
+  }
+}
+@keyframes pulse-warn {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(198, 136, 30, 0.55);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(198, 136, 30, 0);
+  }
+}
+@keyframes pulse-err {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(192, 68, 58, 0.6);
+  }
+  50% {
+    box-shadow: 0 0 0 7px rgba(192, 68, 58, 0);
+  }
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.fade-up {
+  animation: fade-up 0.32s var(--ease-bd) both;
 }

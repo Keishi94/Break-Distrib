@@ -1,0 +1,317 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Break'Distrib — Backoffice CRM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="app/tokens.css"/>
+<style>
+  /* Shell */
+  .app { display: grid; grid-template-columns: auto 1fr; min-height: 100vh; }
+  .main { display: flex; flex-direction: column; min-width: 0; }
+  .content { flex: 1; overflow: auto; background: var(--surface-2); }
+
+  /* Canvas */
+  .canvas-bg {
+    background:
+      radial-gradient(circle at 20% 10%, rgba(243,112,33,0.04), transparent 40%),
+      radial-gradient(circle at 80% 90%, rgba(46,109,180,0.03), transparent 40%),
+      var(--n-25);
+    min-height: 100vh;
+    padding: 32px;
+  }
+  html[data-theme="dark"] .canvas-bg {
+    background:
+      radial-gradient(circle at 20% 10%, rgba(243,112,33,0.07), transparent 40%),
+      radial-gradient(circle at 80% 90%, rgba(46,109,180,0.06), transparent 40%),
+      #0E0D0B;
+  }
+
+  .canvas-head { max-width: 1400px; margin: 0 auto 28px; display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; }
+  .canvas-title { display: flex; align-items: center; gap: 14px; }
+  .canvas-title h1 { margin: 0; font-size: 24px; font-weight: 600; letter-spacing: -0.5px; }
+  .canvas-title .sub { color: var(--text-3); font-size: 13px; margin-top: 4px; }
+
+  /* Screen cards in canvas */
+  .screens { max-width: 1400px; margin: 0 auto; display: grid; gap: 28px; }
+  .screen-frame {
+    background: var(--elev);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: var(--shadow-lg);
+  }
+  .screen-label {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 18px; border-bottom: 1px solid var(--border);
+    background: var(--surface);
+  }
+  .screen-label .tag { font-family: var(--ff-mono); font-size: 11px; color: var(--text-3); letter-spacing: 0.08em; text-transform: uppercase; }
+  .screen-label h3 { margin: 0; font-size: 14.5px; font-weight: 600; }
+
+  .desktop-wrap { height: 820px; background: var(--surface-2); overflow: hidden; position: relative; }
+  .desktop-wrap .app { min-height: 820px; height: 820px; }
+  .desktop-wrap .content { max-height: 820px; }
+
+  /* Prototype mode — fullscreen */
+  body[data-mode="proto"] { overflow: hidden; }
+  body[data-mode="proto"] .canvas-bg { padding: 0; background: var(--surface-2); min-height: 100vh; height: 100vh; }
+  body[data-mode="proto"] .canvas-head { display: none; }
+  body[data-mode="proto"] .screen-label { display: none; }
+  body[data-mode="proto"] .screen-frame { border-radius: 0; border: 0; box-shadow: none; height: 100vh; }
+  body[data-mode="proto"] .desktop-wrap { height: 100vh; }
+  body[data-mode="proto"] .desktop-wrap .app { height: 100vh; min-height: 100vh; }
+  body[data-mode="proto"] .screens { gap: 0; }
+  body[data-mode="proto"] .screens > *:not(.active) { display: none; }
+  body[data-mode="proto"] .mobile-row { height: 100vh; align-items: center; }
+
+  /* Floating proto toolbar — only in proto mode */
+  .proto-bar {
+    position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%);
+    display: none; align-items: center; gap: 6px;
+    background: rgba(20,19,15,0.92); color: #F3ECE0;
+    backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 12px; padding: 6px; z-index: 200;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.35);
+    font-family: var(--ff-sans);
+  }
+  body[data-mode="proto"] .proto-bar { display: inline-flex; }
+  .proto-bar button {
+    background: transparent; border: 0; padding: 6px 12px;
+    font-size: 12.5px; font-weight: 500; color: rgba(243,236,224,0.65);
+    cursor: pointer; border-radius: 7px; font-family: inherit;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .proto-bar button.on { background: rgba(243,112,33,0.22); color: #F37021; }
+  .proto-bar .sep { width: 1px; height: 16px; background: rgba(255,255,255,0.1); margin: 0 4px; }
+  .proto-bar .exit { background: #F37021; color: #fff; }
+  .proto-bar .exit:hover { background: #DA5F14; }
+
+  /* Mode toggle */
+  .mode-toggle { display: inline-flex; background: var(--elev); border: 1px solid var(--border-strong); border-radius: 10px; padding: 3px; box-shadow: var(--shadow-xs); }
+  .mode-toggle button { background: transparent; border: 0; padding: 6px 12px; font-size: 12.5px; font-weight: 500; color: var(--text-3); cursor: pointer; border-radius: 7px; display: inline-flex; align-items: center; gap: 6px; font-family: inherit; }
+  .mode-toggle button.on { background: var(--surface-3); color: var(--text); box-shadow: var(--shadow-xs); }
+
+  /* Mobile frame (simple) */
+  .mobile-row { display: flex; gap: 28px; padding: 36px; justify-content: center; background: var(--surface-2); }
+  .mobile-frame {
+    width: 360px; height: 740px; border-radius: 44px;
+    background: #000; padding: 10px;
+    box-shadow: 0 30px 60px rgba(0,0,0,0.2), 0 0 0 1px rgba(0,0,0,0.1);
+    position: relative; flex-shrink: 0;
+  }
+  .mobile-frame .screen {
+    width: 100%; height: 100%;
+    background: var(--surface); border-radius: 36px;
+    overflow: hidden; position: relative;
+  }
+  .mobile-frame .notch {
+    position: absolute; top: 18px; left: 50%; transform: translateX(-50%);
+    width: 100px; height: 26px; border-radius: 20px; background: #000; z-index: 5;
+  }
+  .mobile-frame .status {
+    position: absolute; top: 14px; left: 0; right: 0; height: 32px;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 0 28px; z-index: 6;
+    font-family: -apple-system, system-ui; font-size: 13px; font-weight: 600;
+  }
+  .mobile-frame[data-dark="true"] .screen { background: #151412; }
+  .mobile-frame[data-dark="true"] .status { color: #fff; }
+  .mobile-scroll { padding-top: 50px; height: 100%; overflow: auto; }
+  .mobile-caption { text-align: center; margin-top: 14px; font-size: 11.5px; color: var(--text-3); font-family: var(--ff-mono); letter-spacing: 0.06em; text-transform: uppercase; }
+</style>
+</head>
+<body data-mode="canvas">
+  <div id="root"></div>
+
+  <!-- Pinned React + Babel -->
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+  <script type="text/babel" src="app/ui.jsx"></script>
+  <script type="text/babel" src="app/data.jsx"></script>
+  <script type="text/babel" src="app/screen-dashboard.jsx"></script>
+  <script type="text/babel" src="app/screen-parc.jsx"></script>
+  <script type="text/babel" src="app/screen-mobile.jsx"></script>
+  <script type="text/babel" src="app/screen-tournees.jsx"></script>
+  <script type="text/babel" src="app/screen-clients.jsx"></script>
+
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+
+    const SCREENS = [
+      { id: "dashboard", label: "Dashboard Direction",     tag: "01 · Desktop", kind: "desktop",  nav: "dashboard", cmp: () => <ScreenDashboard/> },
+      { id: "pipeline",  label: "Pipeline commercial",     tag: "02 · Desktop", kind: "desktop",  nav: "pipeline",  cmp: () => <ScreenPipeline/> },
+      { id: "clients",   label: "Fiche client — Sodexo",   tag: "03 · Desktop", kind: "desktop",  nav: "clients",   cmp: () => <ScreenClient/> },
+      { id: "parc",      label: "Parc distributeurs",      tag: "04 · Desktop", kind: "desktop",  nav: "parc",      cmp: () => <ScreenParc/> },
+      { id: "tournees",  label: "Planification tournées",  tag: "05 · Desktop", kind: "desktop",  nav: "tournees",  cmp: () => <ScreenTournees/> },
+      { id: "reporting", label: "Reporting & KPI",         tag: "06 · Desktop", kind: "desktop",  nav: "reporting", cmp: () => <ScreenReporting/> },
+      { id: "mobile",    label: "Terrain · Technicien",    tag: "07 · Mobile",  kind: "mobile",   nav: "parc",      cmp: null },
+    ];
+
+    function App() {
+      const [mode, setMode]   = useState(() => localStorage.getItem("bd_mode")   || "canvas");
+      const [active, setActive] = useState(() => localStorage.getItem("bd_active") || "dashboard");
+      const [theme, setTheme] = useState(() => localStorage.getItem("bd_theme")  || "light");
+
+      useEffect(() => {
+        document.documentElement.setAttribute("data-theme", theme);
+        localStorage.setItem("bd_theme", theme);
+      }, [theme]);
+      useEffect(() => {
+        document.body.setAttribute("data-mode", mode);
+        localStorage.setItem("bd_mode", mode);
+      }, [mode]);
+      useEffect(() => { localStorage.setItem("bd_active", active); }, [active]);
+
+      // Global nav bridge for inline buttons
+      window.__nav = (id) => {
+        setActive(id);
+        if (mode !== "proto") setMode("proto");
+      };
+
+      const toggleTheme = () => setTheme(theme === "light" ? "dark" : "light");
+
+      return (
+        <div className="canvas-bg">
+          <div className="canvas-head">
+            <div className="canvas-title">
+              <BDMark size={28}/>
+              <div>
+                <h1>Break'Distrib — Backoffice CRM</h1>
+                <div className="sub">5 écrans · MVP · Île-de-France · « La pause, réinventée »</div>
+              </div>
+            </div>
+            <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+              <button onClick={toggleTheme} style={{
+                background: "var(--elev)", border: "1px solid var(--border-strong)",
+                width: 36, height: 36, borderRadius: 10, cursor: "pointer",
+                display: "grid", placeItems: "center", color: "var(--text-2)",
+              }}>
+                <Icon name={theme === "dark" ? "sun" : "moon"} size={16}/>
+              </button>
+              <div className="mode-toggle">
+                <button className={mode === "canvas" ? "on" : ""} onClick={() => setMode("canvas")}>
+                  <Icon name="dashboard" size={13}/> Canvas
+                </button>
+                <button className={mode === "proto" ? "on" : ""} onClick={() => setMode("proto")}>
+                  <Icon name="arrow-right" size={13}/> Prototype
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div className="screens">
+            {SCREENS.map(s => (
+              <ScreenCard key={s.id} def={s} active={active === s.id} onActivate={() => { setActive(s.id); setMode("proto"); }} mode={mode} onNav={setActive} current={active}/>
+            ))}
+          </div>
+
+          {/* Floating toolbar in prototype mode */}
+          <div className="proto-bar">
+            {SCREENS.map(s => (
+              <button key={s.id} className={active === s.id ? "on" : ""} onClick={() => setActive(s.id)} title={s.label}>
+                <Icon name={s.kind === "mobile" ? "machine" : s.nav === "dashboard" ? "dashboard" : s.nav === "pipeline" ? "pipeline" : s.nav === "clients" ? "users" : s.nav === "parc" ? "machine" : s.nav === "tournees" ? "route" : "chart"} size={14}/>
+                <span style={{ fontSize: 12 }}>{s.tag.split(" ")[0]}</span>
+              </button>
+            ))}
+            <span className="sep"/>
+            <button className="exit" onClick={() => setMode("canvas")}>
+              <Icon name="x" size={13}/> Canvas
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    function ScreenCard({ def, active, onActivate, mode, onNav, current }) {
+      const isMobile = def.kind === "mobile";
+      return (
+        <div className={`screen-frame ${active ? "active" : ""}`} data-screen-label={def.tag + " — " + def.label}>
+          <div className="screen-label">
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <span className="tag">{def.tag}</span>
+              <h3>{def.label}</h3>
+            </div>
+            <Button size="sm" variant="secondary" iconRight="arrow-right" onClick={onActivate}>Ouvrir en plein écran</Button>
+          </div>
+
+          {isMobile ? <MobileShowcase/> : <DesktopShell def={def} onNav={onNav} current={current}/>}
+        </div>
+      );
+    }
+
+    function DesktopShell({ def, onNav, current }) {
+      // In canvas mode, each card is its own scoped nav (can click but stays in its card)
+      // In proto mode only the active one shows, so nav can swap
+      return (
+        <div className="desktop-wrap">
+          <div className="app">
+            <SideNav current={current === def.nav ? current : def.nav} onNav={(id) => { onNav?.(id); }} />
+            <div className="main">
+              <TopBar search={def.label} theme={document.documentElement.getAttribute("data-theme")} onTheme={() => {
+                const t = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+                document.documentElement.setAttribute("data-theme", t);
+                localStorage.setItem("bd_theme", t);
+              }}/>
+              <div className="content">
+                {def.cmp()}
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    function MobileShowcase() {
+      return (
+        <div className="mobile-row">
+          <div>
+            <div className="mobile-frame">
+              <div className="notch"/>
+              <div className="status"><span>9:41</span><span>•••</span></div>
+              <div className="screen">
+                <div className="mobile-scroll">
+                  <ScreenMachineMobile/>
+                </div>
+              </div>
+            </div>
+            <div className="mobile-caption">Fiche machine · intervention</div>
+          </div>
+          <div>
+            <div className="mobile-frame">
+              <div className="notch"/>
+              <div className="status"><span>9:41</span><span>•••</span></div>
+              <div className="screen">
+                <div className="mobile-scroll">
+                  <ScreenTourneeMobile/>
+                </div>
+              </div>
+            </div>
+            <div className="mobile-caption">Tournée du jour · technicien</div>
+          </div>
+          <div>
+            <div className="mobile-frame" data-dark="true">
+              <div className="notch"/>
+              <div className="status" style={{ color: "#fff" }}><span>9:41</span><span>•••</span></div>
+              <div className="screen">
+                <div className="mobile-scroll">
+                  <ScreenMachineMobile dark={true}/>
+                </div>
+              </div>
+            </div>
+            <div className="mobile-caption">Fiche machine · dark / plein soleil</div>
+          </div>
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+  </script>
+</body>
+</html>

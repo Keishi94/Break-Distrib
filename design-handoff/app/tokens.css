@@ -1,0 +1,154 @@
+/* =========================================================
+   Break'Distrib — Design tokens (CRM backoffice)
+   Extends the Loader DNA: orange #F37021 / cream #F5EFE6 / ink #0E0E0C
+   ========================================================= */
+
+:root {
+  /* ---------- Brand ---------- */
+  --bd-orange:       #F37021;
+  --bd-orange-600:   #DA5F14;
+  --bd-orange-100:   #FCE2D0;
+  --bd-orange-50:    #FCF0E6;
+  --bd-cream:        #F5EFE6;
+  --bd-cream-2:      #EFE8DC;
+  --bd-ink:          #0E0E0C;
+
+  /* ---------- Neutrals (warm, cream-biased) ---------- */
+  --n-0:   #FDFBF7;
+  --n-25:  #F9F5EE;   /* page bg */
+  --n-50:  #F5EFE6;   /* = cream */
+  --n-100: #EDE6DA;
+  --n-200: #E0D8C9;
+  --n-300: #CCC3B2;
+  --n-400: #A69E8C;
+  --n-500: #7A7365;
+  --n-600: #55503F;
+  --n-700: #3A3730;
+  --n-800: #24231F;
+  --n-900: #14130F;
+
+  /* ---------- Semantics ---------- */
+  --ok:     #2E8F5E;   /* machine en ligne */
+  --ok-bg:  #E3F1E8;
+  --warn:   #C6881E;   /* stock faible / à surveiller */
+  --warn-bg:#F8EBCE;
+  --err:    #C0443A;   /* panne / impayé */
+  --err-bg: #F5DCD8;
+  --info:   #2E6DB4;
+  --info-bg:#DDE8F4;
+
+  /* ---------- Surfaces (light) ---------- */
+  --surface:        #FDFBF7;
+  --surface-2:      #F9F5EE;
+  --surface-3:      #F3ECE0;
+  --elev:           #FFFFFF;
+  --border:         #E3DBCC;
+  --border-strong:  #CFC6B4;
+  --text:           var(--n-900);
+  --text-2:         var(--n-600);
+  --text-3:         var(--n-500);
+  --text-inv:       #FDFBF7;
+
+  /* ---------- Radius / shadow ---------- */
+  --r-xs: 4px;
+  --r-sm: 6px;
+  --r-md: 10px;
+  --r-lg: 14px;
+  --r-xl: 20px;
+  --r-full: 999px;
+
+  --shadow-xs: 0 1px 0 rgba(20,19,15,0.04);
+  --shadow-sm: 0 1px 2px rgba(20,19,15,0.05), 0 1px 1px rgba(20,19,15,0.04);
+  --shadow-md: 0 4px 10px -2px rgba(20,19,15,0.08), 0 2px 4px rgba(20,19,15,0.05);
+  --shadow-lg: 0 18px 40px -12px rgba(20,19,15,0.22), 0 4px 10px -2px rgba(20,19,15,0.08);
+
+  /* ---------- Type ---------- */
+  --ff-sans: "Geist", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --ff-mono: "Geist Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+  /* ---------- Motion ---------- */
+  --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --dur-fast: 120ms;
+  --dur:      200ms;
+  --dur-slow: 320ms;
+}
+
+/* ---------- Dark (Linear-ish, warm) ---------- */
+html[data-theme="dark"] {
+  --surface:        #151412;
+  --surface-2:      #1C1B18;
+  --surface-3:      #22201C;
+  --elev:           #1F1D1A;
+  --border:         #2B2925;
+  --border-strong:  #3A3731;
+  --text:           #F3ECE0;
+  --text-2:         #B8AF9C;
+  --text-3:         #7F7866;
+  --text-inv:       #0E0E0C;
+
+  --ok-bg:   rgba(46,143,94,0.18);
+  --warn-bg: rgba(198,136,30,0.18);
+  --err-bg:  rgba(192,68,58,0.18);
+  --info-bg: rgba(46,109,180,0.18);
+
+  --bd-orange-100: rgba(243,112,33,0.22);
+  --bd-orange-50:  rgba(243,112,33,0.12);
+
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.4);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.45);
+  --shadow-lg: 0 22px 50px -12px rgba(0,0,0,0.55);
+}
+
+/* ========================================================= */
+
+*, *::before, *::after { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0;
+  background: var(--surface-2);
+  color: var(--text);
+  font-family: var(--ff-sans);
+  font-size: 14px;
+  line-height: 1.4;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: "ss01", "cv11";
+}
+
+button { font-family: inherit; }
+input, select, textarea { font-family: inherit; color: inherit; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: var(--n-500); }
+::-webkit-scrollbar-track { background: transparent; }
+
+/* Utility primitives used throughout */
+.mono { font-family: var(--ff-mono); font-feature-settings: "ss01","ss02","zero"; }
+.label { font-size: 10.5px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-3); font-weight: 500; }
+.tabular { font-variant-numeric: tabular-nums; }
+
+.hairline { height: 1px; background: var(--border); border: 0; margin: 0; }
+.vdiv     { width: 1px; align-self: stretch; background: var(--border); }
+
+/* Animated entry for panes */
+@keyframes fadeUp { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.fade-up { animation: fadeUp .32s var(--ease) both; }
+
+/* Pulse for IoT status dots */
+@keyframes pulse-ok {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(46,143,94,0.55); }
+  50%      { box-shadow: 0 0 0 6px rgba(46,143,94,0); }
+}
+@keyframes pulse-warn {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(198,136,30,0.55); }
+  50%      { box-shadow: 0 0 0 6px rgba(198,136,30,0); }
+}
+@keyframes pulse-err {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(192,68,58,0.6); }
+  50%      { box-shadow: 0 0 0 7px rgba(192,68,58,0); }
+}
+
+/* Focus */
+:focus-visible { outline: 2px solid var(--bd-orange); outline-offset: 2px; border-radius: 4px; }

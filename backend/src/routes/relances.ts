@@ -1,33 +1,42 @@
 import { Hono } from 'hono'
-import { db } from '../db/client'
-import { relances } from '../db/schema/index'
-import { eq } from 'drizzle-orm'
+import { zValidator } from '@hono/zod-validator'
+import { z } from 'zod'
+import { requireAuth, requireRole, type AuthVariables } from '../middlewares/auth'
+import { paginationSchema } from '../lib/query'
+import * as svc from '../services/relances'
 
-export const relancesRoutes = new Hono()
-  .get('/', async (c) => {
-    const data = await db.select().from(relances).orderBy(relances.datePlanifiee)
-    return c.json({ data })
+const typeRelance = z.enum(['email', 'appel', 'visite'])
+
+const createSchema = z.object({
+  prospectId: z.string().uuid(),
+  type: typeRelance,
+  statut: z.string().optional(),
+  datePlanifiee: z.coerce.date(),
+  dateRealisee: z.coerce.date().optional().nullable(),
+  notes: z.string().optional().nullable()
+})
+
+const updateSchema = createSchema.partial()
+
+const querySchema = paginationSchema.extend({
+  prospectId: z.string().uuid().optional(),
+  statut: z.string().optional()
+})
+
+const COMMERCIAUX = ['admin', 'direction', 'commercial'] as const
+
+export const relancesRoutes = new Hono<{ Variables: AuthVariables }>()
+  .use('*', requireAuth)
+  .get('/', zValidator('query', querySchema), async (c) => {
+    return c.json(await svc.listRelances(c.req.valid('query')))
   })
-  .post('/', async (c) => {
-    const body = await c.req.json()
-    const [created] = await db.insert(relances).values(body).returning()
-    return c.json({ data: created }, 201)
+  .post('/', requireRole(...COMMERCIAUX), zValidator('json', createSchema), async (c) => {
+    return c.json({ data: await svc.createRelance(c.req.valid('json')) }, 201)
   })
-  .get('/prospect/:prospectId', async (c) => {
-    const data = await db
-      .select()
-      .from(relances)
-      .where(eq(relances.prospectId, c.req.param('prospectId')))
-      .orderBy(relances.datePlanifiee)
-    return c.json({ data })
+  .put('/:id', requireRole(...COMMERCIAUX), zValidator('json', updateSchema), async (c) => {
+    return c.json({ data: await svc.updateRelance(c.req.param('id'), c.req.valid('json')) })
   })
-  .put('/:id', async (c) => {
-    const body = await c.req.json()
-    const [updated] = await db
-      .update(relances)
-      .set(body)
-      .where(eq(relances.id, c.req.param('id')))
-      .returning()
-    if (!updated) return c.json({ error: 'Not found' }, 404)
-    return c.json({ data: updated })
+  .delete('/:id', requireRole(...COMMERCIAUX), async (c) => {
+    await svc.deleteRelance(c.req.param('id'))
+    return c.json({ success: true })
   })

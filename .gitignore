@@ -27,8 +27,8 @@ Thumbs.db
 # Bun
 bun.lock
 
-# Drizzle
-**/src/db/migrations/*.sql
+# Super-admin credentials (auto-generated at seed)
+**/.super-admin-credentials.txt
 
 # Supabase
 **/supabase/.branches
