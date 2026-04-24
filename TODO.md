@@ -1,5 +1,11 @@
 # TODO — Break'Distrib
 
+## État courant (2026-04-24)
+
+- **Branche en revue** : `feat/p0-1-schemas-package` → PR ouverte vers `main`. P0 entièrement fait (schemas, helpers, tests, OpenAPI, lint CI).
+- **Branche snapshot WIP** : `wip/inherited-state-2026-04-24` → modules backend (`clients`, `contacts`, `opportunites`, `tournees`, `interventions`, `parametres`, `me`, `public-contrat`, `services/`, `emails/`, `scripts/`, `db/migrations/`), modifs admin et fichiers infra (`docker-compose.yml`, `README.md`, `design-handoff/`) committés mais pas mergés. **Source de vérité pour P1+** — à trier au cas par cas, ne pas merger telle quelle. Une grosse partie sera réécrite contre le modèle `entreprises` unifié (ADR-001).
+- **Prochaine priorité** : **P1** (refactor `prospects` + `clients` → `entreprises`). Prérequis : la PR P0 mergée. Note du journal du 2026-04-23 : pas de données prod à préserver, on fera `db:push` + reseed.
+
 > Backlog orienté tâches-agent. Chaque case cochée = un PR mergé, des tests verts, une étape franchie.
 >
 > **Convention des tailles** (au doigt mouillé, une session d'agent) :
