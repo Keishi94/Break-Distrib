@@ -30,6 +30,7 @@ app.get('/', (c) =>
 )
 
 app.onError(errorHandler)
+export { app }
 export default {
   port: process.env.PORT ?? 3000,
   fetch: app.fetch
